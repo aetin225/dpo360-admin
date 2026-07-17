@@ -25,8 +25,8 @@ export function useAuth() {
   async function checkSuperAdmin(u) {
     if (!u) { setIsSuperAdmin(false); setLoading(false); return }
     // Vérifier dans la table super_admins
-    const { data } = await supabase.from('super_admins').select('id').eq('user_id', u.id).single()
-    setIsSuperAdmin(!!data || SUPER_ADMINS.includes(u.email))
+    const { data } = await supabase.from('super_admins').select('id').eq('user_id', u.id)
+    setIsSuperAdmin((data && data.length > 0) || SUPER_ADMINS.includes(u.email))
     setLoading(false)
   }
 
