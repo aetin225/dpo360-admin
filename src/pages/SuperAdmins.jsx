@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseAdmin } from '../lib/supabase'
 
 const S = { padding: '11px 14px', borderRadius: 8, border: '1px solid #d3d1c7', background: '#fff', fontSize: 15, width: '100%', fontFamily: 'inherit', boxSizing: 'border-box' }
 
@@ -21,7 +21,7 @@ export default function SuperAdmins() {
     if (!email?.trim()) return
     setSaving(true)
     // Chercher le user_id par email
-    const { data: users } = await supabase.auth.admin.listUsers()
+    const { data: users } = await supabaseAdmin.auth.admin.listUsers()
     const user = users?.users?.find(u => u.email === email.trim())
     if (!user) { setMsg('Utilisateur non trouvé. Il doit d\'abord créer un compte.'); setSaving(false); return }
     const { error } = await supabase.from('super_admins').insert({ user_id: user.id, email: email.trim(), nom })

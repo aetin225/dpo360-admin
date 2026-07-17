@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseAdmin } from '../lib/supabase'
 
 const S = { padding: '11px 14px', borderRadius: 8, border: '1px solid #d3d1c7', background: '#fff', fontSize: 15, width: '100%', fontFamily: 'inherit', boxSizing: 'border-box', color: '#1a1a1a' }
 
@@ -29,7 +29,7 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
     if (orgErr) { setError('Erreur organisation : ' + orgErr.message); setSaving(false); return }
 
     // 2. Créer le compte admin via API admin
-    const { data: authData, error: authErr } = await supabase.auth.admin.createUser({
+    const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
       email: form.admin_email.trim(),
       password: form.admin_password,
       email_confirm: true,
