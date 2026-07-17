@@ -27,11 +27,11 @@ export default function Dashboard() {
   async function supprimer(org) {
     if (!confirm('Supprimer definitivement ' + org.nom + ' ? Toutes les donnees seront supprimees. Cette action est irreversible.')) return
     const id = org.id
-    const tables = ['traitements','demandes_droits','violations','documents','consentements','personnes','sous_traitants','bilans_annuels','evaluations_conformite','parametres','questions_m1','historique_conservation','invitations','membres']
+    const tables = ['traitements','demandes_droits','violations','documents','consentements','personnes','sous_traitants','bilans_annuels','evaluations_conformite','parametres','questions_m1','historique_conservation','invitations','membres','formations']
     for (const table of tables) {
-      await supabase.from(table).delete().eq('organisation_id', id)
+      await supabaseAdmin.from(table).delete().eq('organisation_id', id)
     }
-    const { error } = await supabase.from('organisations').delete().eq('id', id)
+    const { error } = await supabaseAdmin.from('organisations').delete().eq('id', id)
     if (error) { alert('Erreur suppression : ' + error.message); return }
     await load()
   }
