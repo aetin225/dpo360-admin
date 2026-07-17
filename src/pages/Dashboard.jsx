@@ -24,6 +24,17 @@ export default function Dashboard() {
     setLoading(false)
   }
 
+  async function supprimer(org) {
+    if (!confirm(`Supprimer définitivement "${org.nom}" ?
+
+ATTENTION : toutes les données (traitements, violations, documents...) seront supprimées. Cette action est irréversible.`)) return
+    // Supprimer les membres d'abord
+    await supabase.from('membres').delete().eq('organisation_id', org.id)
+    // Supprimer l'organisation (les tables liées via FK seront nettoyées)
+    await supabase.from('organisations').delete().eq('id', org.id)
+    await load()
+  }
+
   async function toggleStatut(org) {
     const newStatut = org.licence_statut === 'active' ? 'suspendue' : 'active'
     await supabase.from('organisations').update({ licence_statut: newStatut }).eq('id', org.id)
@@ -115,6 +126,10 @@ export default function Dashboard() {
                           <button onClick={() => toggleStatut(org)}
                             style={{ padding: '5px 12px', borderRadius: 6, background: org.licence_statut === 'active' ? '#FAEEDA' : '#E1F5EE', border: 'none', color: org.licence_statut === 'active' ? '#633806' : '#085041', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
                             {org.licence_statut === 'active' ? 'Suspendre' : 'Activer'}
+                          </button>
+                          <button onClick={() => supprimer(org)}
+                            style={{ padding: '5px 12px', borderRadius: 6, background: '#FCEBEB', border: 'none', color: '#791F1F', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
+                            🗑 Supprimer
                           </button>
                         </div>
                       </td>
