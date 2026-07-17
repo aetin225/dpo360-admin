@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, supabaseAdmin } from '../lib/supabase'
 
 export default function Dashboard() {
   const [stats, setStats] = useState({ orgs: 0, actives: 0, expirees: 0, membres: 0 })
@@ -25,13 +25,14 @@ export default function Dashboard() {
   }
 
   async function supprimer(org) {
-    if (!confirm(`Supprimer définitivement "${org.nom}" ?
-
-ATTENTION : toutes les données (traitements, violations, documents...) seront supprimées. Cette action est irréversible.`)) return
-    // Supprimer les membres d'abord
-    await supabase.from('membres').delete().eq('organisation_id', org.id)
-    // Supprimer l'organisation (les tables liées via FK seront nettoyées)
-    await supabase.from('organisations').delete().eq('id', org.id)
+    if (!confirm('Supprimer definitivement ' + org.nom + ' ? Toutes les donnees seront supprimees. Cette action est irreversible.')) return
+    const id = org.id
+    const tables = ['traitements','demandes_droits','violations','documents','consentements','personnes','sous_traitants','bilans_annuels','evaluations_conformite','parametres','questions_m1','historique_conservation','invitations','membres']
+    for (const table of tables) {
+      await supabase.from(table).delete().eq('organisation_id', id)
+    }
+    const { error } = await supabase.from('organisations').delete().eq('id', id)
+    if (error) { alert('Erreur suppression : ' + error.message); return }
     await load()
   }
 

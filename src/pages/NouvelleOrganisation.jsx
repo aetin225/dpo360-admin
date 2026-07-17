@@ -47,7 +47,16 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
       statut: 'actif'
     })
 
+    // Envoyer email de bienvenue via Supabase
+    try {
+      await supabaseAdmin.auth.admin.generateLink({
+        type: 'magiclink',
+        email: form.admin_email.trim(),
+      })
+    } catch (e) { console.warn('Email bienvenue:', e) }
+
     setSaving(false)
+    alert(`Organisation "${form.nom}" créée avec succès !\n\nIdentifiants transmis à ${form.admin_email} :\n• Email : ${form.admin_email}\n• Mot de passe temporaire : ${form.admin_password}\n• URL : https://dpo360-delta.vercel.app\n\nCommuniquez ces informations à l'administrateur.`)
     onCreated()
   }
 
@@ -116,6 +125,25 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
           <div style={{ padding: '12px 14px', background: '#FAEEDA', borderRadius: 8, fontSize: 14, color: '#633806', marginTop: '0.5rem' }}>
             ⚠ Communiquez ces identifiants à l'administrateur de l'organisation.
           </div>
+        </div>
+      </div>
+
+      {/* Récapitulatif email à envoyer */}
+      <div style={{ background: '#E1F5EE', border: '1px solid #0F6E56', borderRadius: 12, padding: '1.25rem 1.5rem', marginTop: '1.5rem' }}>
+        <div style={{ fontWeight: 600, fontSize: 16, color: '#0F6E56', marginBottom: 8 }}>📧 Email de bienvenue — à envoyer manuellement</div>
+        <div style={{ fontSize: 14, color: '#085041', lineHeight: 1.8, whiteSpace: 'pre-wrap', fontFamily: 'monospace', background: '#fff', padding: '12px', borderRadius: 8, border: '1px solid #0F6E5630' }}>
+{`Bonjour,
+
+Votre espace de conformité DCP est prêt.
+
+🔗 Accès : https://dpo360-delta.vercel.app
+📧 Email : ${form.admin_email || '[email admin]'}
+🔑 Mot de passe : ${form.admin_password ? '••••••••' : '[mot de passe]'}
+
+Connectez-vous et changez votre mot de passe dès la première connexion.
+
+Cordialement,
+LE CORRESPONDANT — Conformité DCP · ARTCI`}
         </div>
       </div>
 
