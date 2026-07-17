@@ -1,6 +1,7 @@
 import { useState } from 'react'
 import { useAuth } from './hooks/useAuth'
 import Login from './pages/Login'
+import Setup from './pages/Setup'
 import Dashboard from './pages/Dashboard'
 import NouvelleOrganisation from './pages/NouvelleOrganisation'
 import SuperAdmins from './pages/SuperAdmins'
@@ -11,7 +12,7 @@ const NAV = [
 ]
 
 export default function App() {
-  const { user, isSuperAdmin, loading, signOut } = useAuth()
+  const { user, isSuperAdmin, noSuperAdmin, loading, signOut } = useAuth()
   const [page, setPage] = useState('dashboard')
   const [showNew, setShowNew] = useState(false)
 
@@ -21,7 +22,12 @@ export default function App() {
     </div>
   )
 
-  if (!user) return <Login />
+  if (noSuperAdmin) return <Setup onComplete={() => window.location.reload()} />
+
+  if (!user) {
+    // Vérifier si c'est la première fois (aucun super admin)
+    return <Login />
+  }
 
   if (!isSuperAdmin) return (
     <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#0d1b2e', fontFamily: 'system-ui,sans-serif' }}>
