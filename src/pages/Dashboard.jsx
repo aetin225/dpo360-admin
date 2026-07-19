@@ -42,23 +42,42 @@ export default function Dashboard() {
   async function modifierAdmin() {
     if (!editForm.email?.trim()) { alert('Email obligatoire.'); return }
     setEditSaving(true)
-    // Mettre à jour le membre admin
+    // Récupérer les admins existants
     const { data: membres } = await supabaseAdmin.from('membres')
       .select('*').eq('organisation_id', editOrg.id).eq('role', 'admin')
+
     if (membres && membres.length > 0) {
-      await supabaseAdmin.from('membres').update({
-        invited_email: editForm.email.trim()
-      }).eq('id', membres[0].id)
-      // Mettre à jour le mot de passe si renseigné
-      if (editForm.password?.trim() && editForm.password.length >= 8) {
-        await supabaseAdmin.auth.admin.updateUserById(membres[0].user_id, {
+      const ancienAdmin = membres[0]
+      const emailChange = editForm.email.trim() !== ancienAdmin.invited_email
+
+      if (emailChange) {
+        // Désactiver l'ancien compte admin
+        await supabaseAdmin.from('membres').update({ statut: 'suspendu' }).eq('id', ancienAdmin.id)
+        await supabaseAdmin.auth.admin.updateUserById(ancienAdmin.user_id, { ban_duration: '87600h' })
+
+        // Créer un nouveau compte pour le nouvel admin
+        const { data: newAuth, error: authErr } = await supabaseAdmin.auth.admin.createUser({
           email: editForm.email.trim(),
-          password: editForm.password
+          password: editForm.password || 'TempPassword123!',
+          email_confirm: true
+        })
+        if (authErr) { alert('Erreur création compte : ' + authErr.message); setEditSaving(false); return }
+
+        // Ajouter le nouveau membre admin
+        await supabaseAdmin.from('membres').insert({
+          organisation_id: editOrg.id,
+          user_id: newAuth.user.id,
+          role: 'admin',
+          invited_email: editForm.email.trim(),
+          statut: 'actif'
         })
       } else {
-        await supabaseAdmin.auth.admin.updateUserById(membres[0].user_id, {
-          email: editForm.email.trim()
-        })
+        // Même email — juste mettre à jour le mot de passe si fourni
+        if (editForm.password?.trim() && editForm.password.length >= 8) {
+          await supabaseAdmin.auth.admin.updateUserById(ancienAdmin.user_id, {
+            password: editForm.password
+          })
+        }
       }
     }
     // Mettre à jour l'organisation
