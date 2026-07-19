@@ -5,6 +5,9 @@ export default function Dashboard() {
   const [stats, setStats] = useState({ orgs: 0, actives: 0, expirees: 0, membres: 0 })
   const [organisations, setOrganisations] = useState([])
   const [loading, setLoading] = useState(true)
+  const [editOrg, setEditOrg] = useState(null)
+  const [editForm, setEditForm] = useState({})
+  const [editSaving, setEditSaving] = useState(false)
 
   useEffect(() => { load() }, [])
 
@@ -33,6 +36,41 @@ export default function Dashboard() {
     }
     const { error } = await supabaseAdmin.from('organisations').delete().eq('id', id)
     if (error) { alert('Erreur suppression : ' + error.message); return }
+    await load()
+  }
+
+  async function modifierAdmin() {
+    if (!editForm.email?.trim()) { alert('Email obligatoire.'); return }
+    setEditSaving(true)
+    // Mettre à jour le membre admin
+    const { data: membres } = await supabaseAdmin.from('membres')
+      .select('*').eq('organisation_id', editOrg.id).eq('role', 'admin')
+    if (membres && membres.length > 0) {
+      await supabaseAdmin.from('membres').update({
+        invited_email: editForm.email.trim()
+      }).eq('id', membres[0].id)
+      // Mettre à jour le mot de passe si renseigné
+      if (editForm.password?.trim() && editForm.password.length >= 8) {
+        await supabaseAdmin.auth.admin.updateUserById(membres[0].user_id, {
+          email: editForm.email.trim(),
+          password: editForm.password
+        })
+      } else {
+        await supabaseAdmin.auth.admin.updateUserById(membres[0].user_id, {
+          email: editForm.email.trim()
+        })
+      }
+    }
+    // Mettre à jour l'organisation
+    await supabaseAdmin.from('organisations').update({
+      nom: editForm.nom,
+      secteur: editForm.secteur,
+      plan: editForm.plan,
+      licence_fin: editForm.licence_fin,
+      licence_statut: editForm.licence_statut,
+    }).eq('id', editOrg.id)
+    setEditSaving(false)
+    setEditOrg(null)
     await load()
   }
 
@@ -120,6 +158,10 @@ export default function Dashboard() {
                       </td>
                       <td style={{ padding: '14px 16px' }}>
                         <div style={{ display: 'flex', gap: 8 }}>
+                          <button onClick={() => { setEditOrg(org); setEditForm({ nom: org.nom, secteur: org.secteur || '', plan: org.plan || 'starter', licence_fin: org.licence_fin || '', licence_statut: org.licence_statut || 'active', email: '', password: '' }) }}
+                            style={{ padding: '5px 12px', borderRadius: 6, background: '#534AB7', border: 'none', color: '#fff', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
+                            ✎ Modifier
+                          </button>
                           <button onClick={() => renouveler(org)}
                             style={{ padding: '5px 12px', borderRadius: 6, background: '#0F6E56', border: 'none', color: '#fff', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
                             +1 an
@@ -141,6 +183,73 @@ export default function Dashboard() {
             </table>
           )}
       </div>
+    {/* Modal modification */}
+      {editOrg && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000, padding: '1rem' }}>
+          <div style={{ background: '#fff', borderRadius: 16, padding: '2rem', width: '100%', maxWidth: 520, boxShadow: '0 20px 60px rgba(0,0,0,0.3)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h2 style={{ fontSize: 20, fontWeight: 700, margin: 0 }}>Modifier — {editOrg.nom}</h2>
+              <button onClick={() => setEditOrg(null)} style={{ background: 'none', border: 'none', fontSize: 20, cursor: 'pointer', color: '#888' }}>✕</button>
+            </div>
+
+            <div style={{ borderBottom: '1px solid #e8eaed', paddingBottom: '1rem', marginBottom: '1rem' }}>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#534AB7', marginBottom: '0.75rem' }}>🏢 Organisation</div>
+              {[['nom','Nom'],['secteur','Secteur']].map(([id,lbl]) => (
+                <div key={id} style={{ marginBottom: '0.75rem' }}>
+                  <div style={{ fontSize: 13, color: '#5F5E5A', marginBottom: 4 }}>{lbl}</div>
+                  <input value={editForm[id] || ''} onChange={e => setEditForm({...editForm,[id]:e.target.value})}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d3d1c7', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+                </div>
+              ))}
+              <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+                <div>
+                  <div style={{ fontSize: 13, color: '#5F5E5A', marginBottom: 4 }}>Plan</div>
+                  <select value={editForm.plan || 'starter'} onChange={e => setEditForm({...editForm,plan:e.target.value})}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d3d1c7', fontSize: 14, fontFamily: 'inherit' }}>
+                    {['starter','pro','enterprise'].map(p => <option key={p} value={p}>{p}</option>)}
+                  </select>
+                </div>
+                <div>
+                  <div style={{ fontSize: 13, color: '#5F5E5A', marginBottom: 4 }}>Statut licence</div>
+                  <select value={editForm.licence_statut || 'active'} onChange={e => setEditForm({...editForm,licence_statut:e.target.value})}
+                    style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d3d1c7', fontSize: 14, fontFamily: 'inherit' }}>
+                    {['active','suspendue','expiree'].map(s => <option key={s} value={s}>{s}</option>)}
+                  </select>
+                </div>
+              </div>
+              <div style={{ marginTop: 10 }}>
+                <div style={{ fontSize: 13, color: '#5F5E5A', marginBottom: 4 }}>Date expiration licence</div>
+                <input type="date" value={editForm.licence_fin || ''} onChange={e => setEditForm({...editForm,licence_fin:e.target.value})}
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d3d1c7', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              </div>
+            </div>
+
+            <div>
+              <div style={{ fontSize: 14, fontWeight: 600, color: '#1F4E79', marginBottom: '0.75rem' }}>👤 Compte administrateur</div>
+              <div style={{ marginBottom: '0.75rem' }}>
+                <div style={{ fontSize: 13, color: '#5F5E5A', marginBottom: 4 }}>Nouvel email</div>
+                <input type="email" value={editForm.email || ''} onChange={e => setEditForm({...editForm,email:e.target.value})}
+                  placeholder="nouveau@email.com"
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d3d1c7', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              </div>
+              <div>
+                <div style={{ fontSize: 13, color: '#5F5E5A', marginBottom: 4 }}>Nouveau mot de passe (laisser vide pour ne pas changer)</div>
+                <input type="password" value={editForm.password || ''} onChange={e => setEditForm({...editForm,password:e.target.value})}
+                  placeholder="Min. 8 caractères"
+                  style={{ width: '100%', padding: '9px 12px', borderRadius: 8, border: '1px solid #d3d1c7', fontSize: 14, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+              </div>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '1.5rem' }}>
+              <button onClick={() => setEditOrg(null)} style={{ padding: '10px 20px', borderRadius: 8, border: '1px solid #d3d1c7', background: '#fff', cursor: 'pointer', fontSize: 14 }}>Annuler</button>
+              <button onClick={modifierAdmin} disabled={editSaving}
+                style={{ padding: '10px 24px', borderRadius: 8, background: '#1F4E79', border: 'none', color: '#fff', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                {editSaving ? 'Enregistrement...' : '✓ Enregistrer'}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   )
 }
