@@ -43,14 +43,19 @@ export default function Setup({ onComplete }) {
       }
 
       // Ajouter dans super_admins
-      await supabaseAdmin.from('super_admins').insert({
+      const { error: insertErr } = await supabaseAdmin.from('super_admins').insert({
         user_id: authData.user.id,
         email: email.trim(),
         nom: nom || email.trim()
       })
 
+      if (insertErr) { setError('Erreur insertion : ' + insertErr.message); setLoading(false); return }
+
+      // Connecter l'utilisateur créé
+      await supabase.auth.signInWithPassword({ email: email.trim(), password })
+
       setLoading(false)
-      onComplete()
+      window.location.href = window.location.href
     } catch (e) {
       setError('Erreur : ' + e.message)
       setLoading(false)
