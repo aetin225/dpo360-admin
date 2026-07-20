@@ -33,7 +33,7 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
       email: form.admin_email.trim(),
       password: form.admin_password,
       email_confirm: true,
-      user_metadata: { nom: form.admin_nom }
+      user_metadata: { nom: form.admin_nom, password_changed: false }
     })
 
     if (authErr) { setError('Erreur compte admin : ' + authErr.message); setSaving(false); return }
