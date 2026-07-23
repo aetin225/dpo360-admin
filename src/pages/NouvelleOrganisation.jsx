@@ -56,7 +56,7 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
     } catch (e) { console.warn('Email bienvenue:', e) }
 
     setSaving(false)
-    alert(`Organisation "${form.nom}" créée avec succès !\n\nIdentifiants transmis à ${form.admin_email} :\n• Email : ${form.admin_email}\n• Mot de passe temporaire : ${form.admin_password}\n• URL : https://dpo360-delta.vercel.app\n\nCommuniquez ces informations à l'administrateur.`)
+    alert(`Organisation "${form.nom}" créée avec succès !\n\nIdentifiants transmis à ${form.admin_email} :\n• Email : ${form.admin_email}\n• Mot de passe temporaire : ${form.admin_password}\n• URL : https://lecorrespondant.ci\n\nCommuniquez ces informations à l'administrateur.`)
     onCreated()
   }
 
@@ -136,7 +136,7 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
 
 Votre espace de conformité DCP est prêt.
 
-🔗 Accès : https://dpo360-delta.vercel.app
+🔗 Accès : https://lecorrespondant.ci
 📧 Email : ${form.admin_email || '[email admin]'}
 🔑 Mot de passe : ${form.admin_password ? '••••••••' : '[mot de passe]'}
 
