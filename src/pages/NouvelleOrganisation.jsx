@@ -27,47 +27,49 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
 
     if (orgErr) { setError('Erreur organisation : ' + orgErr.message); setSaving(false); return }
 
-    // 2. Créer le compte admin via API admin
-    const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
-      email: form.admin_email.trim(),
-      password: form.admin_password,
-      email_confirm: true,
-      user_metadata: { nom: form.admin_nom, password_changed: false }
-    })
 
-    if (authErr) { setError('Erreur compte admin : ' + authErr.message); setSaving(false); return }
+    // 2. Inviter l'admin via Supabase Auth (envoie l'email et crée le compte)
+    let adminUserId = null
+    const { data: inviteData, error: inviteErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(
+      form.admin_email.trim(),
+      {
+        redirectTo: 'https://lecorrespondant.ci',
+        data: { nom: form.admin_nom, organisation: form.nom, password_changed: false }
+      }
+    )
+
+    if (inviteErr) {
+      if (inviteErr.status === 422 || inviteErr.message?.includes('already')) {
+        // Email déjà enregistré — récupérer l'utilisateur existant
+        const { data: usersData } = await supabaseAdmin.auth.admin.listUsers()
+        const existing = usersData?.users?.find(u => u.email === form.admin_email.trim())
+        if (existing) {
+          adminUserId = existing.id
+        } else {
+          setError('Erreur : ' + inviteErr.message); setSaving(false); return
+        }
+      } else {
+        setError('Erreur invitation : ' + inviteErr.message); setSaving(false); return
+      }
+    } else {
+      adminUserId = inviteData.user.id
+    }
 
     // 3. Ajouter dans membres comme admin
-    await supabase.from('membres').insert({
+    const { error: memErr } = await supabase.from('membres').insert({
       organisation_id: org.id,
-      user_id: authData.user.id,
+      user_id: adminUserId,
       role: 'admin',
       invited_email: form.admin_email.trim(),
       statut: 'actif'
     })
-
-    // Envoyer email de bienvenue via Supabase
-    try {
-      await supabaseAdmin.auth.admin.generateLink({
-        type: 'magiclink',
-        email: form.admin_email.trim(),
-      })
-    } catch (e) { console.warn('Email bienvenue:', e) }
-
-    // Envoyer email d'invitation via Supabase Auth
-    try {
-      await supabaseAdmin.auth.admin.inviteUserByEmail(form.admin_email.trim(), {
-        redirectTo: 'https://lecorrespondant.ci',
-        data: { organisation: form.nom, role: 'admin' }
-      })
-    } catch (e) {
-      console.warn('Email invitation:', e.message)
-    }
+    if (memErr) { setError('Erreur membre : ' + memErr.message); setSaving(false); return }
 
     setSaving(false)
-    alert(`Organisation "${form.nom}" créée avec succès !\n\nUn email d'invitation a été envoyé à ${form.admin_email}.`)
+    alert('Organisation "' + form.nom + '" créée ! Un email d\'invitation a été envoyé à ' + form.admin_email + '.')
     onCreated()
   }
+
 
   return (
     <div>
