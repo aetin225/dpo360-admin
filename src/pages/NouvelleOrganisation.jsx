@@ -11,8 +11,7 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
 
   async function creer() {
     if (!form.nom?.trim()) { setError("Le nom est obligatoire."); return }
-    if (!form.admin_email?.trim() || !form.admin_password?.trim()) { setError("Email et mot de passe admin obligatoires."); return }
-    if (form.admin_password.length < 8) { setError("Mot de passe : 8 caractères minimum."); return }
+    if (!form.admin_email?.trim()) { setError("Email admin obligatoire."); return }
 
     setSaving(true); setError('')
 
@@ -120,7 +119,7 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
           {[
             ['admin_nom', 'Nom complet', 'Ex : Ama KOUASSI'],
             ['admin_email', 'Email *', 'Ex : admin@entreprise.ci'],
-            ['admin_password', 'Mot de passe temporaire *', 'Min. 8 caractères'],
+
           ].map(([id, lbl, ph]) => (
             <div key={id} style={{ marginBottom: '1rem' }}>
               <div style={{ fontSize: 14, color: '#5F5E5A', marginBottom: 6, fontWeight: 500 }}>{lbl}</div>
@@ -133,7 +132,7 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
             </div>
           ))}
           <div style={{ padding: '12px 14px', background: '#FAEEDA', borderRadius: 8, fontSize: 14, color: '#633806', marginTop: '0.5rem' }}>
-            ⚠ Communiquez ces identifiants à l'administrateur de l'organisation.
+            ℹ Un email d'invitation sera envoyé automatiquement à l'administrateur.
           </div>
         </div>
       </div>
