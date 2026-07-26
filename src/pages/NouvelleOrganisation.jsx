@@ -55,8 +55,18 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
       })
     } catch (e) { console.warn('Email bienvenue:', e) }
 
+    // Envoyer email d'invitation via Supabase Auth
+    try {
+      await supabaseAdmin.auth.admin.inviteUserByEmail(form.admin_email.trim(), {
+        redirectTo: 'https://lecorrespondant.ci',
+        data: { organisation: form.nom, role: 'admin' }
+      })
+    } catch (e) {
+      console.warn('Email invitation:', e.message)
+    }
+
     setSaving(false)
-    alert(`Organisation "${form.nom}" créée avec succès !\n\nIdentifiants transmis à ${form.admin_email} :\n• Email : ${form.admin_email}\n• Mot de passe temporaire : ${form.admin_password}\n• URL : https://lecorrespondant.ci\n\nCommuniquez ces informations à l'administrateur.`)
+    alert(`Organisation "${form.nom}" créée avec succès !\n\nUn email d'invitation a été envoyé à ${form.admin_email}.`)
     onCreated()
   }
 
