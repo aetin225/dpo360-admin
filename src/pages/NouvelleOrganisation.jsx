@@ -30,7 +30,7 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
 
     // 2. Créer le compte admin avec un mot de passe temporaire
     let adminUserId = null
-    const tempPassword = Math.random().toString(36).slice(-10) + 'A1!'
+    const tempPassword = form.admin_password?.trim() || (Math.random().toString(36).slice(-10) + 'A1!')
 
     const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
       email: form.admin_email.trim(),
@@ -142,8 +142,14 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
               />
             </div>
           ))}
+          <div style={{ marginBottom: '1rem' }}>
+            <div style={{ fontSize: 14, color: '#5F5E5A', marginBottom: 6, fontWeight: 500 }}>Mot de passe temporaire *</div>
+            <input type="text" value={form.admin_password || ''} onChange={e => setForm({ ...form, admin_password: e.target.value })}
+              placeholder="Min. 8 caractères (généré automatiquement si vide)"
+              style={{ width: '100%', padding: '11px 14px', borderRadius: 8, border: '1px solid #d3d1c7', background: '#fff', fontSize: 15, fontFamily: 'inherit', boxSizing: 'border-box' }} />
+          </div>
           <div style={{ padding: '12px 14px', background: '#FAEEDA', borderRadius: 8, fontSize: 14, color: '#633806', marginTop: '0.5rem' }}>
-            ℹ Un email d'invitation sera envoyé automatiquement à l'administrateur.
+            ⚠ Communiquez ces identifiants à l'administrateur. Il devra changer son mot de passe à la première connexion.
           </div>
         </div>
       </div>
