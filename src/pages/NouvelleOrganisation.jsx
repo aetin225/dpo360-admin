@@ -28,31 +28,40 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
     if (orgErr) { setError('Erreur organisation : ' + orgErr.message); setSaving(false); return }
 
 
-    // 2. Inviter l'admin via Supabase Auth (envoie l'email et crée le compte)
+    // 2. Créer le compte admin avec un mot de passe temporaire
     let adminUserId = null
-    const { data: inviteData, error: inviteErr } = await supabaseAdmin.auth.admin.inviteUserByEmail(
-      form.admin_email.trim(),
-      {
-        redirectTo: 'https://lecorrespondant.ci',
-        data: { nom: form.admin_nom, organisation: form.nom, password_changed: false }
-      }
-    )
+    const tempPassword = Math.random().toString(36).slice(-10) + 'A1!'
 
-    if (inviteErr) {
-      if (inviteErr.status === 422 || inviteErr.message?.includes('already')) {
+    const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
+      email: form.admin_email.trim(),
+      password: tempPassword,
+      email_confirm: true,
+      user_metadata: { nom: form.admin_nom, organisation: form.nom, password_changed: false }
+    })
+
+    if (authErr) {
+      if (authErr.message?.includes('already')) {
         // Email déjà enregistré — récupérer l'utilisateur existant
         const { data: usersData } = await supabaseAdmin.auth.admin.listUsers()
         const existing = usersData?.users?.find(u => u.email === form.admin_email.trim())
         if (existing) {
           adminUserId = existing.id
         } else {
-          setError('Erreur : ' + inviteErr.message); setSaving(false); return
+          setError('Erreur : ' + authErr.message); setSaving(false); return
         }
       } else {
-        setError('Erreur invitation : ' + (inviteErr.message || inviteErr.msg || JSON.stringify(inviteErr))); setSaving(false); return
+        setError('Erreur création compte : ' + authErr.message); setSaving(false); return
       }
     } else {
-      adminUserId = inviteData.user.id
+      adminUserId = authData.user.id
+      // Envoyer email de réinitialisation pour que l'admin définisse son mot de passe
+      try {
+        await supabaseAdmin.auth.admin.generateLink({
+          type: 'recovery',
+          email: form.admin_email.trim(),
+          options: { redirectTo: 'https://lecorrespondant.ci' }
+        })
+      } catch(e) { console.warn('Email reset:', e) }
     }
 
     // 3. Ajouter dans membres comme admin
@@ -66,7 +75,7 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
     if (memErr) { setError('Erreur membre : ' + memErr.message); setSaving(false); return }
 
     setSaving(false)
-    alert('Organisation "' + form.nom + '" créée ! Un email d\'invitation a été envoyé à ' + form.admin_email + '.')
+    alert('Organisation "' + form.nom + '" créée !\n\nIdentifiants admin :\n• Email : ' + form.admin_email + '\n• Mot de passe temporaire : ' + tempPassword + '\n\nCommuniquez ces identifiants à l\'administrateur.\nIl devra changer son mot de passe à la première connexion.')
     onCreated()
   }
 
