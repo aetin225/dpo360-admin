@@ -49,7 +49,7 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
           setError('Erreur : ' + inviteErr.message); setSaving(false); return
         }
       } else {
-        setError('Erreur invitation : ' + inviteErr.message); setSaving(false); return
+        setError('Erreur invitation : ' + (inviteErr.message || inviteErr.msg || JSON.stringify(inviteErr))); setSaving(false); return
       }
     } else {
       adminUserId = inviteData.user.id
