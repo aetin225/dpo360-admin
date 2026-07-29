@@ -1,8 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = 'https://mludvtzvcapdrqcjiytf.supabase.co'
-const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sdWR2dHp2Y2FwZHJxY2ppeXRmIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc4MjU3NDQxMiwiZXhwIjoyMDk4MTUwNDEyfQ.KlenTwY0dAk_7O7cyfSgrnWVR202LCm42JjzUtx-Igs'
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Im1sdWR2dHp2Y2FwZHJxY2ppeXRmIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODI1NzQ0MTIsImV4cCI6MjA5ODE1MDQxMn0.OUezOCwBhaK1hkJ9UVysMrq-oQaIJzXu3mmd8c12BH8'
+const SUPABASE_URL = 'https://db.lecorrespondant.ci'
+const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE2NDE3NjkyMDAsImV4cCI6MTc5OTUzNTYwMH0.YE9YKkrAZTgMIe_Pe5lj6QfJHLsndg8GR5g2La33yqE'
+const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNjQxNzY5MjAwLCJleHAiOjE3OTk1MzU2MDB9.eEDGy575BPTAi9GIaTYg3ggs0a3He5My5u4zeNsrT3E'
 
 // Client normal pour la connexion admin
 export const supabase = createClient(SUPABASE_URL, ANON_KEY, {
