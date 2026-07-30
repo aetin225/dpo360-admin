@@ -95,7 +95,7 @@ export default function Dashboard() {
 
   async function toggleStatut(org) {
     const newStatut = org.licence_statut === 'active' ? 'suspendue' : 'active'
-    await supabase.from('organisations').update({ licence_statut: newStatut }).eq('id', org.id)
+    await supabaseAdmin.from('organisations').update({ licence_statut: newStatut }).eq('id', org.id)
     await load()
   }
 
@@ -105,7 +105,7 @@ export default function Dashboard() {
     nouvelleFin.setFullYear(nouvelleFin.getFullYear() + 1)
     const dateAffichee = nouvelleFin.toISOString().split('T')[0]
     if (!confirm(`Prolonger la licence de "${org.nom}" jusqu'au ${dateAffichee} ?`)) return
-    const { error } = await supabase.from('organisations').update({
+    const { error } = await supabaseAdmin.from('organisations').update({
       licence_fin: dateAffichee,
       licence_statut: 'active'
     }).eq('id', org.id)
