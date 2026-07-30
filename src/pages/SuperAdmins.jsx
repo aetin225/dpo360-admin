@@ -6,6 +6,7 @@ const S = { padding: '11px 14px', borderRadius: 8, border: '1px solid #d3d1c7', 
 export default function SuperAdmins() {
   const [admins, setAdmins] = useState([])
   const [email, setEmail] = useState('')
+  const [password, setPassword] = useState('')
   const [nom, setNom] = useState('')
   const [saving, setSaving] = useState(false)
   const [msg, setMsg] = useState('')
@@ -19,12 +20,27 @@ export default function SuperAdmins() {
 
   async function ajouter() {
     if (!email?.trim()) return
+    if (!password?.trim() || password.length < 8) { setMsg('Mot de passe requis (8 caractères minimum).'); return }
     setSaving(true)
-    // Chercher le user_id par email
-    const { data: users } = await supabaseAdmin.auth.admin.listUsers()
-    const user = users?.users?.find(u => u.email === email.trim())
-    if (!user) { setMsg('Utilisateur non trouvé. Il doit d\'abord créer un compte.'); setSaving(false); return }
-    const { error } = await supabase.from('super_admins').insert({ user_id: user.id, email: email.trim(), nom })
+    // Créer le compte ou récupérer l'existant
+    let userId = null
+    const { data: authData, error: authErr } = await supabaseAdmin.auth.admin.createUser({
+      email: email.trim(),
+      password: password.trim(),
+      email_confirm: true,
+      user_metadata: { nom }
+    })
+    if (authErr) {
+      if (authErr.message?.includes('already')) {
+        const { data: users } = await supabaseAdmin.auth.admin.listUsers()
+        const existing = users?.users?.find(u => u.email === email.trim())
+        if (existing) userId = existing.id
+        else { setMsg('Erreur : ' + authErr.message); setSaving(false); return }
+      } else { setMsg('Erreur création compte : ' + authErr.message); setSaving(false); return }
+    } else {
+      userId = authData.user.id
+    }
+    const { error } = await supabase.from('super_admins').insert({ user_id: userId, email: email.trim(), nom })
     if (error) { setMsg('Erreur : ' + error.message); setSaving(false); return }
     setMsg('Super admin ajouté ✓')
     setEmail(''); setNom('')
@@ -51,6 +67,7 @@ export default function SuperAdmins() {
         <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap' }}>
           <input value={nom} onChange={e => setNom(e.target.value)} placeholder="Nom complet" style={{ ...S, flex: 1, minWidth: 160 }} />
           <input type="email" value={email} onChange={e => setEmail(e.target.value)} placeholder="Email *" style={{ ...S, flex: 2, minWidth: 200 }} />
+          <input type="password" value={password} onChange={e => setPassword(e.target.value)} placeholder="Mot de passe *" style={{ ...S, flex: 1, minWidth: 160 }} />
           <button onClick={ajouter} disabled={saving}
             style={{ padding: '11px 20px', borderRadius: 8, background: '#1F4E79', border: 'none', color: '#fff', fontSize: 15, fontWeight: 600, cursor: 'pointer', flexShrink: 0 }}>
             {saving ? '...' : '+ Ajouter'}
