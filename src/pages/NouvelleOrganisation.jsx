@@ -17,7 +17,8 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
 
     // 1. Créer l'organisation
     const debut = new Date().toISOString().split('T')[0]
-    const fin = new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0]
+    const dureeMs = form.plan === 'demo' ? 30*24*60*60*1000 : 365*24*60*60*1000
+    const fin = new Date(Date.now() + dureeMs).toISOString().split('T')[0]
 
     const { data: org, error: orgErr } = await supabaseAdmin.from('organisations').insert({
       nom: form.nom, secteur: form.secteur, effectif: form.effectif,
@@ -113,9 +114,17 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
           <div style={{ marginBottom: '1rem' }}>
             <div style={{ fontSize: 14, color: '#5F5E5A', marginBottom: 6, fontWeight: 500 }}>Plan</div>
             <select value={form.plan} onChange={e => setForm({ ...form, plan: e.target.value })} style={S}>
-              {['starter','pro','enterprise'].map(o => <option key={o} value={o}>{o.charAt(0).toUpperCase()+o.slice(1)}</option>)}
+              <option value="demo">🎯 Démo (30 jours)</option>
+              <option value="starter">Starter</option>
+              <option value="pro">Pro</option>
+              <option value="enterprise">Enterprise</option>
             </select>
           </div>
+          {form.plan === 'demo' && (
+            <div style={{ padding: '10px 14px', background: '#FCE4D6', border: '1px solid #C55A11', borderRadius: 8, fontSize: 13, color: '#633806', marginTop: 6 }}>
+              🎯 <strong>Licence démo</strong> — Durée : 30 jours à partir d'aujourd'hui. L'accès sera automatiquement bloqué à l'expiration.
+            </div>
+          )}
           <div style={{ padding: '12px 14px', background: '#E1F5EE', borderRadius: 8, fontSize: 14, color: '#085041' }}>
             📅 Licence : 1 an à partir d'aujourd'hui
           </div>
