@@ -113,11 +113,30 @@ export default function Dashboard() {
     await load()
   }
 
+  async function accorderDemo(org) {
+    const debut = new Date()
+    const fin = new Date()
+    fin.setDate(fin.getDate() + 30)
+    const dateDebut = debut.toISOString().split('T')[0]
+    const dateFin = fin.toISOString().split('T')[0]
+    if (!confirm(`Accorder une licence de démonstration de 30 jours à "${org.nom}" ?\n\nDébut : ${dateDebut}\nFin : ${dateFin}`)) return
+    const { error } = await supabaseAdmin.from('organisations').update({
+      licence_debut: dateDebut,
+      licence_fin: dateFin,
+      licence_statut: 'active',
+      plan: 'demo'
+    }).eq('id', org.id)
+    if (error) { alert('Erreur : ' + error.message); return }
+    alert(`✓ Licence démo accordée à ${org.nom} jusqu'au ${dateFin}`)
+    await load()
+  }
+
   const today = new Date().toISOString().split('T')[0]
   const statutBadge = (org) => {
     if (org.licence_statut === 'suspendue') return { label: 'Suspendue', bg: '#F1EFE8', color: '#444' }
     if (!org.licence_fin || org.licence_fin < today) return { label: 'Expirée', bg: '#FCEBEB', color: '#791F1F' }
     const jours = Math.ceil((new Date(org.licence_fin) - new Date()) / (1000*60*60*24))
+    if (org.plan === 'demo') return { label: `🎯 Démo — ${jours} jours restants`, bg: '#FCE4D6', color: '#C55A11' }
     if (jours <= 30) return { label: `Expire dans ${jours}j`, bg: '#FAEEDA', color: '#633806' }
     return { label: 'Active', bg: '#E1F5EE', color: '#085041' }
   }
@@ -188,6 +207,10 @@ export default function Dashboard() {
                           <button onClick={() => renouveler(org)}
                             style={{ padding: '5px 12px', borderRadius: 6, background: '#0F6E56', border: 'none', color: '#fff', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
                             +1 an
+                          </button>
+                          <button onClick={() => accorderDemo(org)}
+                            style={{ padding: '5px 12px', borderRadius: 6, background: '#C55A11', border: 'none', color: '#fff', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
+                            🎯 Démo 30j
                           </button>
                           <button onClick={() => toggleStatut(org)}
                             style={{ padding: '5px 12px', borderRadius: 6, background: org.licence_statut === 'active' ? '#FAEEDA' : '#E1F5EE', border: 'none', color: org.licence_statut === 'active' ? '#633806' : '#085041', fontSize: 13, cursor: 'pointer', fontWeight: 500 }}>
