@@ -19,7 +19,7 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
     const debut = new Date().toISOString().split('T')[0]
     const fin = new Date(Date.now() + 365*24*60*60*1000).toISOString().split('T')[0]
 
-    const { data: org, error: orgErr } = await supabase.from('organisations').insert({
+    const { data: org, error: orgErr } = await supabaseAdmin.from('organisations').insert({
       nom: form.nom, secteur: form.secteur, effectif: form.effectif,
       forme: form.forme, adresse: form.adresse, plan: form.plan,
       licence_debut: debut, licence_fin: fin, licence_statut: 'active'
