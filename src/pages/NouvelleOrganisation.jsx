@@ -65,8 +65,8 @@ export default function NouvelleOrganisation({ onBack, onCreated }) {
       } catch(e) { console.warn('Email reset:', e) }
     }
 
-    // 3. Ajouter dans membres comme admin
-    const { error: memErr } = await supabase.from('membres').insert({
+    // 3. Ajouter dans membres comme admin (supabaseAdmin pour bypasser RLS)
+    const { error: memErr } = await supabaseAdmin.from('membres').insert({
       organisation_id: org.id,
       user_id: adminUserId,
       role: 'admin',
