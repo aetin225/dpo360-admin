@@ -1,10 +1,8 @@
 import { createClient } from '@supabase/supabase-js'
 
-const SUPABASE_URL = 'https://db.lecorrespondant.ci'
-// ⚠ SÉCURITÉ: Cette clé ne doit JAMAIS être utilisée côté client public (app DPO)
-// Elle est acceptable ici car le panel admin est réservé aux super admins
-const SERVICE_ROLE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoic2VydmljZV9yb2xlIiwiaXNzIjoic3VwYWJhc2UiLCJpYXQiOjE2NDE3NjkyMDAsImV4cCI6MTc5OTUzNTYwMH0.YE9YKkrAZTgMIe_Pe5lj6QfJHLsndg8GR5g2La33yqE'
-const ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJyb2xlIjoiYW5vbiIsImlzcyI6InN1cGFiYXNlIiwiaWF0IjoxNjQxNzY5MjAwLCJleHAiOjE3OTk1MzU2MDB9.eEDGy575BPTAi9GIaTYg3ggs0a3He5My5u4zeNsrT3E'
+const SUPABASE_URL = import.meta.env.VITE_SUPABASE_URL
+const SERVICE_ROLE_KEY = import.meta.env.VITE_SUPABASE_SERVICE_ROLE_KEY
+const ANON_KEY = import.meta.env.VITE_SUPABASE_ANON_KEY
 
 // Client normal pour la connexion admin
 export const supabase = createClient(SUPABASE_URL, ANON_KEY, {
